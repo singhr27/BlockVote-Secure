@@ -9,7 +9,7 @@ Please clone the git repository from the provided GitHub link to your local repo
     - matplotlib
     - qrcode
 
-    If it says "Not Found- x library", we are not sure why pycryptodome does this, but to make this project work, please follow the path to the crypto library and rename it to Crypto to make sure standard libraries work properly.
+    -x If it says "Not Found- x library", we are not sure why pycryptodome does this, but to make this project work, please follow the path to the crypto library and rename it to Crypto to make sure standard libraries work properly.
 
     For example:
 
