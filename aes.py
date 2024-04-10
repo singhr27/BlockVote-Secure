@@ -1,3 +1,12 @@
+# Description: This file contains the implementation of the AES encryption and decryption algorit
+# hm. The AES algorithm is a symmetric block cipher that encrypts and decrypts data in blocks
+# of 128 bits. The implementation includes the key expansion, encryption, and decryption steps of
+# the AES algorithm. The key expansion step generates a set of round keys from the original key.
+# The encryption step encrypts the plaintext using the generated round keys, while the decryption
+# step decrypts the ciphertext using the same round keys in reverse order. The implementation
+# supports 128-bit key size and 128-bit block size.
+
+
 import base64
 import numpy as np
 from hashlib import *
@@ -5,6 +14,7 @@ from hashlib import *
 
 BLOCK_SIZE = 16
 
+# The pad function adds padding to the input data to make its length a multiple of the block size.
 def get_private_key(voterid):
     # Read the key from file
     with open("key.txt", "rb") as file:
@@ -22,6 +32,7 @@ def get_private_key(voterid):
 
     return derived_key
 
+# The pad function adds padding to the input data to make its length a multiple of the block size.
 def encryptn(raw, private_key):
     print("Raw data:", raw)
     print("BLock size:", AES.block_size)
@@ -44,6 +55,7 @@ rcon = np.array([
     ], dtype=np.uint8)
 
 
+# The read_sbox function reads the S-box values from a file and returns them as a list.
 def read_sbox(file):
     s_box = [0] * 256
     try:
@@ -62,18 +74,22 @@ def read_sbox(file):
     return s_box
 
 
+# The read_bytes function reads the bytes from a file and returns them as a numpy array.
 def read_bytes(file):
     with open(file, 'r') as f:
         line = f.readline()
         hex_strings = line.split()
         return np.array([int(hex_str, 16) for hex_str in hex_strings], dtype=np.uint8)
 
+# The rot_word function rotates the word by one byte to the left.
 def rot_word(word):
     return np.roll(word, -1)
 
+# The sub_word function substitutes each byte of the word using the S-box.
 def sub_word(word, sbox):
     return np.array([sbox[val] for val in word], dtype=np.uint8)
 
+# The expand_key function generates the round keys from the original key using the AES key expansion algorithm.
 def expand_key(key, sbox):
     nr = 10
     nk = len(key) // 4
@@ -97,6 +113,7 @@ def expand_key(key, sbox):
     return w
 
 
+# The encrypt function encrypts the plaintext using the AES algorithm.
 def encrypt(input, expanded_keys, sbox):
     state = [[0 for _ in range(4)] for _ in range(4)]
 
@@ -124,6 +141,7 @@ def encrypt(input, expanded_keys, sbox):
 
     return state
 
+# The decrypt function decrypts the ciphertext using the AES algorithm.
 def decrypt(cipher, expanded_keys, inv_sbox):
     for j in range(4):
         for i in range(4):
@@ -153,12 +171,14 @@ def decrypt(cipher, expanded_keys, inv_sbox):
     return state
 
 
+# The add_round_key function performs the AddRoundKey operation on the state matrix.
 def add_round_key(state, round_key):
     for i in range(4):
         for j in range(4):
             state[i][j] ^= round_key[i][j]
     return state
 
+# The get_round_key function retrieves the round key from the expanded keys based on the round number.
 def get_round_key(expanded_keys, r):
     round_key = [[0 for _ in range(4)] for _ in range(4)]
     for j in range(4):
@@ -166,12 +186,14 @@ def get_round_key(expanded_keys, r):
             round_key[i][j] = expanded_keys[4 * r + j][i]
     return round_key
 
+# The sub_bytes function performs the SubBytes operation on the state matrix.
 def sub_bytes(state, sbox):
     for i in range(len(state)):
         for j in range(len(state[0])):
             state[i][j] = sbox[state[i][j] & 0xFF] 
     return state
 
+# The inv_sub_bytes function performs the inverse SubBytes operation on the state matrix.
 def inv_sub_bytes(state, inv_sbox):
     for i in range(len(state)):
         for j in range(len(state[0])):
@@ -179,6 +201,7 @@ def inv_sub_bytes(state, inv_sbox):
     return state
 
 
+# The shift_rows function performs the ShiftRows operation on the state matrix.
 def shift_rows(state):
     new_state = [[0] * len(state[0]) for _ in range(len(state))]
     for i in range(len(state)):
@@ -187,6 +210,7 @@ def shift_rows(state):
     return new_state
 
 
+# The inv_shift_rows function performs the inverse ShiftRows operation on the state matrix.
 def inv_shift_rows(state):
     new_state = [[0] * len(state[0]) for _ in range(len(state))]
     for i in range(len(state)):
@@ -195,6 +219,7 @@ def inv_shift_rows(state):
     return new_state
 
 
+# The mix_columns function performs the MixColumns operation on the state matrix.
 def mix_columns(state):
     
     new_state = [[0 for _ in range(4)] for _ in range(4)]
@@ -210,6 +235,7 @@ def mix_columns(state):
             
     return new_state
 
+# The inv_mix_cols function performs the inverse MixColumns operation on the state matrix.
 def inv_mix_cols(state):
     new_state = [[0 for _ in range(4)] for _ in range(4)]
     for j in range(4):
@@ -249,6 +275,7 @@ def multiply_by_0d(hex_val):
     result = multiply_by_02(result)
     return result ^ hex_val
 
+
 def multiply_by_0e(hex_val):
     result = multiply_by_02(hex_val)
     result = result ^ hex_val
@@ -256,6 +283,8 @@ def multiply_by_0e(hex_val):
     result = result ^ hex_val
     return multiply_by_02(result)
 
+
+# The main function demonstrates the encryption and decryption process using the AES algorithm.
 def main():
     sbox = read_sbox("sbox.txt")
     print(sbox)

@@ -1,3 +1,11 @@
+#This is the main file for the voting simulation. 
+#It contains the code for the blockchain, the voting process, and the Flask web application.
+#The blockchain is used to store the votes and the results of the election.
+#The voting process is simulated by the Flask web application, where voters can sign up, vote, and view the results.
+#The blockchain is updated with the votes as they are cast, and the results are displayed in real-time.
+#The blockchain is also used to verify the integrity of the votes and the results.
+
+
 from hashlib import sha256
 from hashlib import *
 from time import sleep, time
@@ -17,7 +25,8 @@ from Crypto.PublicKey import RSA
 import rsa as rsa
 import qrcode
 import glob
-import matplotlib.pyplot as plt; #plt.rcdefaults()
+import matplotlib.pyplot as plt; 
+plt.rcdefaults()
 import numpy as np
 import pickle as pk
 import os,glob
@@ -25,24 +34,31 @@ import base64
 import socket
 
 
+#--global variables
 BLOCK_SIZE = 16
-
-
-
-
+DIFFICULTY = 3
+BLOCK_TIME_LIMIT = 20
+PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 registered_voters = []
 hidden_voter_id = ''
 voter_keys = {}
 
+#---------------class definitions-----------------#
 
-
-
-# Global variables
-DIFFICULTY = 3
-BLOCK_TIME_LIMIT = 20
-PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
-
+#--class for vote
+#--each vote object will have the following attributes:
+#--hidden_voter_id: the hashed voter id
+#--candidate: the candidate id
+#--voter_public_key: the voter's public key
+#--time: the time of vote
+#--vote_data: the data of the vote
+#--count: the total number of votes
+#--the class will have the following methods:
+#--get_voter_public_key: returns the voter's public key
+#--encrypt_vote: encrypts the vote data and returns the encrypted data
+#--inc_vote_count: increments the vote count
+#--get_vote_count: returns the vote count
 class Vote:
     count = 0
 
@@ -77,6 +93,19 @@ class Vote:
         return cls.count
 
 
+
+#--class for blockchain
+#--the blockchain will have the following attributes:
+#--chain: a list to store the blocks
+#--admin_priv: the admin's private key
+#--admin_pub: the admin's public key
+#--the blockchain will have the following methods:
+#--genesis: returns the genesis block
+#--add_genesis: adds the genesis block to the chain
+#--display: displays the blockchain
+#--update_vote_pool: updates the vote pool
+#--is_vote_pool_empty: checks if the vote pool is empty
+#--verify_chain: verifies the blockchain
 class Blockchain:
     chain = []
     admin_priv, admin_pub = rsa.generate_rsa_keys()
@@ -84,7 +113,8 @@ class Blockchain:
     def __init__(self):
         self.add_genesis()
         print('Blockchain initialized')
-
+    #
+    #static methods
     @staticmethod
     def genesis():
         gen = Block(0,"Please reinvent the democracy.",0, sha256(str("Please reinvent the democracy.").encode('utf-8')).hexdigest(), DIFFICULTY, time.time(),'',0,'Errrrrorrr')
@@ -96,7 +126,9 @@ class Blockchain:
         genesis_block.nonce = genesis_block.pow()
         genesis_block.hash = genesis_block.calc_hash()
         Blockchain.chain.append(genesis_block)
+        # we will store the genesis block in a file
         with open('temp/Blockchain.dat', 'ab') as gen_file:
+            #serialize the block object
             pickle.dump(genesis_block, gen_file)
         print("Genesis block added")
 
@@ -127,11 +159,6 @@ class Blockchain:
             print("Some error occurred: ", e)
         return "Done"
 
-    def is_vote_pool_empty(self):
-        my_path = os.path.join(PROJECT_PATH, 'temp', 'votefile.csv')
-        if os.path.isfile(os.path.expanduser(my_path)) and os.stat(os.path.expanduser(my_path)).st_size == 0:
-            return True
-        return False
 
     @classmethod
     def verify_chain(cls):
@@ -142,6 +169,26 @@ class Blockchain:
         return True
 
 
+    def is_vote_pool_empty(self):
+        my_path = os.path.join(PROJECT_PATH, 'temp', 'votefile.csv')
+        if os.path.isfile(os.path.expanduser(my_path)) and os.stat(os.path.expanduser(my_path)).st_size == 0:
+            return True
+        return False
+
+
+#--class for block
+#--each block object will have the following attributes:
+#--height: the height of the block
+#--data: the data of the block
+#--number_of_votes: the number of votes in the block
+#--merkle: the merkle root of the block
+#--DIFFICULTY: the difficulty level of the block
+#--time_stamp: the time of the block
+#--prev_hash: the hash of the previous block
+#--nonce: the nonce of the block
+#--hash: the hash of the block
+#--the block will have the following methods:
+#--pow: the proof of work method
 class Block:
     def __init__(self, height=0, data='WARNING = SOME ERROR OCCURRED', votes=0, merkle='0', DIFFICULTY=0, time_stamp=0, prev_hash='0', pow=0, hash_='ERROR'):
         self.height = height
@@ -208,6 +255,7 @@ class Block:
 app = Flask(__name__)
 
 
+
 @app.route('/')
 #--the login page, home page
 def home():
@@ -221,6 +269,7 @@ voterkeys = {} #--voter's keys stored temporarily in this dictionary
 
 
 @app.route('/signup', methods = ['POST'])
+#--voter signup page
 def votersignup():
     voterid = request.form['voterid']
     pin = request.form['pin']
@@ -250,7 +299,7 @@ def votersignup():
     else:
         return render_template('oops.html')
 
-
+#--voting page
 @app.route('/vote', methods = ['POST'])
 def voter():
 #--the voter is eligible if reached this page.
@@ -292,6 +341,7 @@ def voter():
     return redirect('/thanks')
 
 
+#--thank you page
 @app.route('/thanks', methods = ['GET'])
 def thank():
     #--thank you page
@@ -308,17 +358,7 @@ def clear_garbage():
 
 
 
-
-
-
-
-
-
-
-
-#Results
-
-
+#Results - NOT WORKING RIGHT NOW
 # def get_result(admin_private_key):
 #     vote_list = []
 #     with open('temp/blockchain.dat', 'rb') as block_file:
@@ -345,6 +385,10 @@ def clear_garbage():
 
 #     return results
 
+#--timer for mining blocks
+#--the timer will mine a block after every 15 seconds
+#--the block will be added to the blockchain
+#--the timer will repeat
 def inline_timer(bt):
     while True:
         sleep(bt)        #--global variable
@@ -354,10 +398,13 @@ def inline_timer(bt):
             pickle._dump(blockx,blockfile)
         print("block added")
 
+
+#--timer for mining blocks
 def mine_block_timer():
     timer_thread = thr.Thread(target=inline_timer, args=(BLOCK_TIME_LIMIT,))
     timer_thread.start()
 
+#--send vote data to peer
 def send_vote_data_to_peer(host, port, data_list):
     c = socket.socket()
     c.connect((host, port))
@@ -366,12 +413,12 @@ def send_vote_data_to_peer(host, port, data_list):
     if not c.recv(8192).decode() == 'ACKD':
         pass
 
-
+#--receive vote data from peer
 def jsonify_vote_data(vote_data_list):
     json_dict = {'voter_public_key': vote_data_list[0], 'data': vote_data_list[1], 'key': vote_data_list[2]}
     return json.dumps(json_dict)
 
-# AES Encryption
+# --------------------AES Encryption-------------------
 def get_private_key(password):  
     password_hash = sha256(password.encode('utf-8')).digest()  # Changed to digest()
     salt = b"this is a salt and the m0re c0mplex th!s wi11 be, the m0re d!44icult w1!! b3 the K37"
@@ -407,6 +454,7 @@ def decrypt(enc, private_key):
     return unpad(cipher.decrypt(enc[BLOCK_SIZE:]), BLOCK_SIZE)  # Changed to unpad() with BLOCK_SIZE parameter
 
 
+#--show the performance of the candidates -NOT WORKING RIGHT NOW
 # def show_performance(performance_data):
 #     parties = ('NDP', 'Liberal', 'PPC')  
 #     y_positions = np.arange(len(parties))  
@@ -431,11 +479,12 @@ def generate_QR(data, pin):
     img.save('static/' + qr_filename)
     return qr_filename
 
-
+#--clear the data
 def cleardata():
     for filename in glob.glob("static/qr*"):
         os.remove(filename)
 
+# Convert the private key to data
 def sk_to_data(private_key, pin):  # Changed variable name
     key = private_key.exportKey().decode()
 
@@ -444,7 +493,7 @@ def sk_to_data(private_key, pin):  # Changed variable name
     data = '****'.join(element for element in ls)
     return data
 
-#veirfy block
+#sync blocks
 def sync_blocks(blockchain):
     for i in range(1, len(blockchain)):
         # Introduce a delay of 1 second between each iteration
@@ -456,6 +505,7 @@ def sync_blocks(blockchain):
 
     return 0, True
 
+#veirfy block
 def verify_block(block):
     check_1 = sha256((str(str(block.data) + str(block.nonce) + str(block.timeStamp) + str(block.prevHash))).encode('utf-8')).hexdigest()
     # Introduce a delay of 5 seconds
@@ -465,6 +515,7 @@ def verify_block(block):
     return check_1 == check_2
 
 
+#--main function
 if __name__ == '__main__':
     cleardata()
     mine_block_timer()
@@ -483,7 +534,9 @@ if __name__ == '__main__':
     Blockchain.display()
     print("\n\n\n", end='')
     print("Total number of votes:", Vote.get_vote_count())
-    # my_result = get_result(EVoting.admin_priv)
+
+
+    # my_result = get_result(EVoting.admin_priv) #--NOT WORKING RIGHT NOW
     # print(my_result)
     # with open('temp/result.csv', 'r', newline="") as votefile:
     #     reader = csv.reader(votefile)

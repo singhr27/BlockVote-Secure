@@ -1,3 +1,8 @@
+#Description: This script demonstrates how to generate RSA keys, 
+#encrypt and decrypt messages using RSA, create and verify signatures using RSA.
+
+# Importing required libraries
+
 from Crypto.PublicKey import RSA
 from Crypto.Signature import pkcs1_15
 from Crypto.Cipher import PKCS1_OAEP

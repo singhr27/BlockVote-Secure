@@ -1,3 +1,5 @@
+# Description: This script listens for incoming connections from the client and processes the received data.
+# It writes the received data to a CSV file and sends an acknowledgment back to the client.
 import socket
 import simplejson as json
 import csv
