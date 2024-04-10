@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>َE-Voting </title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='styles/style.css') }}">
+  </head>
+  <body style = "zoom:120%">
+
+<form class="box" action="/signup" method="POST" id="signup">
+  <h1>Voter Sign Up</h1>
+  <input type="text" name="voterid" placeholder="VoterID">
+  <input type="password" name="pin" id = "password1" placeholder="4-6 PIN/Password" maxlength="6" minlength="4" oninput="setPasswordConfirmValidity();">
+  <input type="password" name="pin2" id="password2" placeholder="Confirm PIN/Password" maxlength="6" minlength="4" oninput="setPasswordConfirmValidity();">
+  <input type="submit" name="Submit" value="Submit">
+  <script>
+			    function setPasswordConfirmValidity(str) {
+			        const password1 = document.getElementById('password1');
+			        const password2 = document.getElementById('password2');
+
+			        if (password1.value === password2.value) {
+			             password2.setCustomValidity('');
+			        } else {
+			            password2.setCustomValidity('Passwords don\'t match');
+			        }
+			        console.log('password2 customError ', document.getElementById('password2').validity.customError);
+			        console.log('password2 validationMessage ', document.getElementById('password2').validationMessage);
+    }
+  </script>
+</form>
+
+
+  </body> 
+</html>
